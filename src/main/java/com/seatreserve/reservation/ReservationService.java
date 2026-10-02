@@ -10,6 +10,8 @@ import com.seatreserve.util.Retries;
 import com.seatreserve.web.BadRequestException;
 import com.seatreserve.web.ConflictException;
 import com.seatreserve.web.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.TransientDataAccessException;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ import java.util.Set;
 @Service
 public class ReservationService {
 
+    private static final Logger log = LoggerFactory.getLogger(ReservationService.class);
     private static final int MAX_ATTEMPTS = 8;
 
     private final ShowRepository showRepo;
@@ -74,13 +77,19 @@ public class ReservationService {
         String fingerprint = fingerprint(showId, seats);
 
         try {
-            return Retries.withRetry(MAX_ATTEMPTS, () -> reserveOnce(userId, show, seats, key, fingerprint));
+            ReserveResult result = Retries.withRetry(MAX_ATTEMPTS,
+                    () -> reserveOnce(userId, show, seats, key, fingerprint));
+            log.info("reserve {} show={} user={} seats={}",
+                    result.created() ? "secured" : "idempotent-replay", showId, userId, seats);
+            return result;
         } catch (ConflictException ce) {
             metrics.declined(ce.getCode());
+            log.info("reserve declined reason={} show={} user={} seats={}", ce.getCode(), showId, userId, seats);
             throw ce;
         } catch (TransientDataAccessException te) {
             // Retries exhausted under extreme contention: a clean 409, never a 5xx. No seat was sold.
             metrics.declined("transient_conflict");
+            log.info("reserve declined reason=transient_conflict show={} user={} seats={}", showId, userId, seats);
             throw new ConflictException("transient_conflict", "could not secure seats, please retry");
         }
     }
