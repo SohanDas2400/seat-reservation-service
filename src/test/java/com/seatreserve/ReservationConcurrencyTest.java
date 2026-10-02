@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Docker is not available, so `mvn package` stays green on machines without Docker.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 class ReservationConcurrencyTest {
 
     @Container
