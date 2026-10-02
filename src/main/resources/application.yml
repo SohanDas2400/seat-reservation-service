@@ -36,24 +36,22 @@ app:
 management:
   endpoints:
     web:
-      base-path: ""
       exposure:
         include: health,info,prometheus
-      path-mapping:
-        prometheus: metrics
   endpoint:
     health:
       probes:
-        enabled: true
+        enabled: true          # adds /actuator/health/liveness and /actuator/health/readiness
       show-details: always
       group:
         liveness:
           include: livenessState
         readiness:
-          include: readinessState,db
+          include: readinessState,db   # readiness includes the DB check -> fails closed
   health:
     db:
       enabled: true
+# Prometheus scrape is also served at /metrics by MetricsController (and /actuator/prometheus).
 
 logging:
   structured:

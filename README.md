@@ -64,9 +64,9 @@ Build / test without Docker compose:
 | `POST` | `/shows/{id}/reserve` | `Bearer` | `{ seats[], idempotency_key? }` (+ optional `Idempotency-Key` header). |
 | `POST` | `/reservations/{id}/confirm` | `Bearer` (owner) | `held → confirmed`. |
 | `POST` | `/reservations/{id}/cancel`  | `Bearer` (owner) | release seats → `available`. |
-| `GET`  | `/healthz` · `/health/liveness` | — | liveness. |
-| `GET`  | `/readyz` · `/health/readiness` | — | readiness — checks DB, **fails closed (503)**. |
-| `GET`  | `/metrics` | — | Prometheus exposition. |
+| `GET`  | `/healthz` · `/actuator/health/liveness` | — | liveness. |
+| `GET`  | `/readyz` · `/actuator/health/readiness` | — | readiness — checks DB, **fails closed (503)**. |
+| `GET`  | `/metrics` · `/actuator/prometheus` | — | Prometheus exposition. |
 
 ### Reserve outcomes
 - `201 Created` — seats secured (status `held`, carries `expires_at`).
@@ -115,7 +115,7 @@ What a healthy run shows: exactly **1** `201` for the hot seat, everyone else `4
 
 ## Observability
 
-- **Health:** `/readyz` (and `/health/readiness`) run `SELECT 1` and return `503` when the DB is
+- **Health:** `/readyz` (and `/actuator/health/readiness`) check the DB and return `503` when it is
   unreachable — readiness fails closed so a load balancer stops routing to a broken instance.
 - **Metrics (`/metrics`, Prometheus):**
   - `reservations_confirmed_total` — seats secured;
