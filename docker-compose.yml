@@ -1,0 +1,30 @@
+# A clean checkout runs the exact same way we deploy:  docker compose up --build
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: seatreserve
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: seat
+      MYSQL_PASSWORD: seatpw
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build: .
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/seatreserve?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+      SPRING_DATASOURCE_USERNAME: seat
+      SPRING_DATASOURCE_PASSWORD: seatpw
+      JWT_SECRET: "dev-only-secret-change-me-please-32bytes-minimum-0123456789"
+      ADMIN_TOKEN: "admin-local"
+    ports:
+      - "8080:8080"
