@@ -1,0 +1,12 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+.idea/
+*.iml
+*.iws
+.vscode/
+.DS_Store
+*.log
+
+# local planning note (kept out of the public repo)
+PLAN.md

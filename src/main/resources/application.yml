@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: seat-reserve
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/seatreserve?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${SPRING_DATASOURCE_USERNAME:seat}
+    password: ${SPRING_DATASOURCE_PASSWORD:seatpw}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:40}
+      minimum-idle: 5
+      connection-timeout: 20000
+      # Take the per-user-limit / seat-claim decisions at READ COMMITTED.
+      # (InnoDB defaults to REPEATABLE READ, which adds gap locks and more deadlocks under the stampede.)
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      # Cap lock waits so a stuck wait surfaces as a retryable timeout instead of hanging.
+      connection-init-sql: "SET SESSION innodb_lock_wait_timeout = 10"
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+server:
+  port: ${PORT:8080}
+  tomcat:
+    threads:
+      max: 200
+    accept-count: 1000
+    max-connections: 10000
+
+app:
+  jwt-secret: ${JWT_SECRET:dev-only-secret-change-me-please-32bytes-minimum-0123456789}
+  admin-token: ${ADMIN_TOKEN:admin-local}
+  hold-ttl-seconds: ${HOLD_TTL_SECONDS:120}
+  default-per-user-limit: ${DEFAULT_PER_USER_LIMIT:4}
+
+management:
+  endpoints:
+    web:
+      base-path: ""
+      exposure:
+        include: health,info,prometheus
+      path-mapping:
+        prometheus: metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState,db
+  health:
+    db:
+      enabled: true
+
+logging:
+  structured:
+    format:
+      console: ${LOG_FORMAT:}   # set to "ecs" or "logstash" in prod for JSON logs; empty = human-readable locally
+  pattern:
+    # include the correlation id (set by RequestIdFilter) in plain-text logs
+    level: "%5p [${spring.application.name},%X{requestId:-}]"
