@@ -5,7 +5,7 @@ it never sells the same seat twice, never lets a user exceed their booking limit
 double-charges a retried request — then exposes health, metrics and structured logs so you can watch
 it behave correctly in real time.
 
-- **Live URL:** `https://<your-app>.onrender.com`  *(fill in after deploy)*
+- **Live URL:** https://seat-reserve.onrender.com  (health: `/readyz`, metrics: `/metrics`)
 - **Stack:** Java 21 · Spring Boot 3.5 · MySQL 8 (InnoDB) · Flyway · Micrometer/Prometheus · Docker
 - **Design deep-dive:** see [WRITEUP.md](WRITEUP.md)
 
